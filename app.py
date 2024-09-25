@@ -1,34 +1,107 @@
-from flask import Flask, request, send_from_directory, render_template, redirect, url_for
+from flask import Flask, request, send_from_directory, render_template, redirect, url_for, flash, send_file
 import os
+import mimetypes
 
 app = Flask(__name__)
-NAS_DIR = '/home/ishanurgaonkar/nas'  # Change this to your NAS path
+app.secret_key = 'ishanihar'  # Change this for production!
+NAS_DIR = '/home/ishanurgaonkar/nas'  # Ensure this path exists and Flask has access to it.
 
-@app.route('/')
-def index():
-    files = os.listdir(NAS_DIR)
-    return render_template('index.html', files=files)
+# Ensure the NAS directory exists
+if not os.path.exists(NAS_DIR):
+    os.makedirs(NAS_DIR)
+
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # 10GB file size limit
+
+# Files to exclude from the listing (hidden files, system files)
+excluded_files = ['.DS_Store', 'Thumbs.db', '$RECYCLE.BIN', 'System Volume Information']
+
+def get_filtered_files(path):
+    try:
+        files = os.listdir(path)
+        return [f for f in files if not f.startswith('.') and f not in excluded_files]
+    except Exception as e:
+        flash(f"Error accessing directory: {str(e)}", 'danger')
+        return []
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def index(path):
+    full_path = os.path.join(NAS_DIR, path)
+    
+    if not os.path.exists(full_path):
+        flash(f"Directory '{path}' does not exist.", 'danger')
+        return redirect(url_for('index'))
+    
+    if os.path.isdir(full_path):
+        files = get_filtered_files(full_path)
+        return render_template('index.html', files=files, current_path=path)
+    else:
+        return send_from_directory(NAS_DIR, path, as_attachment=True)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
+        flash('No file part', 'danger')
         return redirect(request.url)
+    
     file = request.files['file']
-    if file.filename != '':
-        file.save(os.path.join(NAS_DIR, file.filename))
-    return redirect(url_for('index'))
+    current_path = request.form.get('current_path', '')
 
-@app.route('/download/<filename>')
+    if file.filename == '':
+        flash('No selected file', 'danger')
+        return redirect(request.url)
+    
+    try:
+        save_path = os.path.join(NAS_DIR, current_path)
+        file.save(os.path.join(save_path, file.filename))
+        flash(f"File '{file.filename}' uploaded successfully!", 'success')
+    except Exception as e:
+        flash(f"Error uploading file: {str(e)}", 'danger')
+    
+    return redirect(url_for('index', path=current_path))
+
+@app.route('/download/<path:filename>')
 def download_file(filename):
-    return send_from_directory(NAS_DIR, filename, as_attachment=True)
+    try:
+        return send_from_directory(NAS_DIR, filename, as_attachment=True)
+    except Exception as e:
+        flash(f"Error downloading file: {str(e)}", 'danger')
+        return redirect(url_for('index'))
 
-@app.route('/delete/<filename>', methods=['POST'])
+@app.route('/view/<path:filename>')
+def view_file(filename):
+    try:
+        file_path = os.path.join(NAS_DIR, filename)
+        mime_type, _ = mimetypes.guess_type(file_path)
+        
+        if mime_type:
+            if mime_type.startswith('video/') or mime_type.startswith('audio/'):
+                return render_template('view_media.html', filename=filename, mime_type=mime_type)
+            elif mime_type == 'text/plain':
+                with open(file_path, 'r') as file:
+                    file_content = file.read()
+                return render_template('view_media.html', filename=filename, mime_type=mime_type, file_content=file_content)
+            else:
+                return send_file(file_path, mimetype=mime_type)
+        else:
+            flash(f"File '{filename}' cannot be viewed.", 'danger')
+            return redirect(url_for('index'))
+    except Exception as e:
+        flash(f"Error viewing file: {str(e)}", 'danger')
+        return redirect(url_for('index'))
+
+@app.route('/delete/<path:filename>', methods=['POST'])
 def delete_file(filename):
     try:
         os.remove(os.path.join(NAS_DIR, filename))
+        flash(f"File '{filename}' deleted successfully.", 'success')
     except Exception as e:
-        return str(e)
+        flash(f"Error deleting file: {str(e)}", 'danger')
     return redirect(url_for('index'))
+
+@app.route('/nas')  # Optional: Only if you need the nas endpoint
+def nas():
+    return "This is the NAS page."
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
