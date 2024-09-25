@@ -3,26 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View File</title>
+    <title>View Media - {{ filename }}</title>
 </head>
 <body>
     <h1>Viewing {{ filename }}</h1>
-    
-    <!-- Handle different media types (PDF, video, audio) -->
+
+    <!-- Display video files -->
     {% if mime_type.startswith('video/') %}
-        <video controls width="600">
-            <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
-            Your browser does not support the video tag.
-        </video>
+    <video controls width="600">
+        <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Display audio files -->
     {% elif mime_type.startswith('audio/') %}
-        <audio controls>
-            <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
-            Your browser does not support the audio element.
-        </audio>
+    <audio controls>
+        <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Display PDF files -->
     {% elif mime_type == 'application/pdf' %}
-        <iframe src="{{ url_for('download_file', filename=filename) }}" width="100%" height="600px"></iframe>
+    <iframe src="{{ url_for('download_file', filename=filename) }}" width="100%" height="600px"></iframe>
+
     {% else %}
-        <p>This file type is not viewable.</p>
+    <p>This file cannot be viewed directly.</p>
     {% endif %}
 
     <br>
