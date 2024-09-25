@@ -86,6 +86,11 @@ def view_file(filename):
             if mime_type.startswith('video/') or mime_type.startswith('audio/') or mime_type == 'application/pdf':
                 # Render the view_media.html template for media files
                 return render_template('view_media.html', filename=filename, mime_type=mime_type)
+            elif mime_type == 'text/plain':
+                # Read the content of text files
+                with open(file_path, 'r') as file:
+                    file_content = file.read()
+                return render_template('view_media.html', filename=filename, mime_type=mime_type, file_content=file_content)
             else:
                 # Serve other viewable files (like images, text files) directly
                 return send_file(file_path, mimetype=mime_type)
