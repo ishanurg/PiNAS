@@ -1,7 +1,6 @@
-from flask import Flask, request, send_from_directory, render_template, redirect, url_for, flash, jsonify
+from flask import Flask, request, send_from_directory, render_template, redirect, url_for, flash, send_file
 import os
 import mimetypes
-from datetime import datetime
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -10,7 +9,7 @@ NAS_DIR = '/home/ishanurgaonkar/nas'  # Directory where files are stored
 
 # Ensure the NAS directory exists
 if not os.path.exists(NAS_DIR):
-    os.makedirs(NAS_DIR)  # Create the directory if it does not exist
+    os.makedirs(NAS_DIR)
 
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # Set max file upload size to 10GB
 
@@ -30,13 +29,11 @@ def get_filtered_files(path):
         flash(f"Error accessing directory: {str(e)}", 'danger')  # Flash an error message
         return []
 
-@app.route('/', defaults={'path': '', 'search': ''})
-@app.route('/<path:path>', defaults={'search': ''})
-@app.route('/search/<search>', defaults={'path': ''})
-def index(path, search):
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def index(path):
     """
     Main page for displaying files and directories.
-    Supports searching and navigating through directories.
     """
     full_path = os.path.join(NAS_DIR, path)  # Construct the full path
 
@@ -46,15 +43,7 @@ def index(path, search):
 
     if os.path.isdir(full_path):
         files = get_filtered_files(full_path)  # Get filtered files
-
-        # Implement search functionality
-        if search:
-            files = [f for f in files if search.lower() in f.lower()]  # Filter files based on search input
-
-        # Sort files by modification time
-        files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(full_path, x)), reverse=True)
-        
-        return render_template('index.html', files=files, current_path=path, search=search)  # Render the main page
+        return render_template('index.html', files=files, current_path=path)  # Render the main page
     else:
         # If it's a file, serve it for download
         return send_from_directory(NAS_DIR, path, as_attachment=True)
@@ -65,20 +54,24 @@ def upload_file():
     Endpoint to handle file uploads.
     """
     if 'file' not in request.files:
-        return jsonify({'success': False, 'message': 'No file part'}), 400  # Handle missing file part
+        flash('No file part', 'danger')
+        return redirect(request.url)
     
     file = request.files['file']  # Get the uploaded file
     current_path = request.form.get('current_path', '')  # Get the current path from the form
 
     if file.filename == '':
-        return jsonify({'success': False, 'message': 'No selected file'}), 400  # Handle empty file name
-
+        flash('No selected file', 'danger')
+        return redirect(request.url)
+    
     try:
         save_path = os.path.join(NAS_DIR, current_path)  # Construct the save path
         file.save(os.path.join(save_path, file.filename))  # Save the file
-        return jsonify({'success': True, 'message': f"File '{file.filename}' uploaded successfully!"}), 200  # Success response
+        flash(f"File '{file.filename}' uploaded successfully!", 'success')  # Flash success message
     except Exception as e:
-        return jsonify({'success': False, 'message': f"Error uploading file: {str(e)}"}), 500  # Error response
+        flash(f"Error uploading file: {str(e)}", 'danger')  # Flash error message
+    
+    return redirect(url_for('index', path=current_path))
 
 @app.route('/create_folder', methods=['POST'])
 def create_folder():
@@ -130,7 +123,7 @@ def view_file(filename):
                     file_content = file.read()  # Read text file content
                 return render_template('view_media.html', filename=filename, mime_type=mime_type, file_content=file_content)  # Render text viewer
             else:
-                return send_from_directory(NAS_DIR, filename, mimetype=mime_type)  # Serve the file directly
+                return send_file(file_path, mimetype=mime_type)  # Serve the file directly
         else:
             flash(f"File '{filename}' cannot be viewed.", 'danger')  # Flash error message
             return redirect(url_for('index'))  # Redirect to the main page
@@ -141,13 +134,18 @@ def view_file(filename):
 @app.route('/delete/<path:filename>', methods=['POST'])
 def delete_file(filename):
     """
-    Endpoint to delete a file.
+    Endpoint to delete a file or folder.
     """
     try:
-        os.remove(os.path.join(NAS_DIR, filename))  # Remove the file
-        flash(f"File '{filename}' deleted successfully.", 'success')  # Flash success message
+        full_path = os.path.join(NAS_DIR, filename)
+        if os.path.isdir(full_path):
+            os.rmdir(full_path)  # Remove the folder
+            flash(f"Folder '{filename}' deleted successfully.", 'success')  # Flash success message
+        else:
+            os.remove(full_path)  # Remove the file
+            flash(f"File '{filename}' deleted successfully.", 'success')  # Flash success message
     except Exception as e:
-        flash(f"Error deleting file: {str(e)}", 'danger')  # Flash error message
+        flash(f"Error deleting file/folder: {str(e)}", 'danger')  # Flash error message
     return redirect(url_for('index'))  # Redirect to the main page
 
 if __name__ == '__main__':
