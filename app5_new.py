@@ -1,6 +1,7 @@
-from flask import Flask, request, send_from_directory, render_template, redirect, url_for, flash, send_file
+from flask import Flask, request, send_from_directory, render_template, redirect, url_for, flash, jsonify
 import os
 import mimetypes
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'ishanihar'
@@ -12,7 +13,7 @@ if not os.path.exists(NAS_DIR):
 
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024 * 1024  # 10GB file size limit
 
-# Files to exclude from the listing (hidden files, system files)
+# Files to exclude from the listing
 excluded_files = ['.DS_Store', 'Thumbs.db', '$RECYCLE.BIN', 'System Volume Information']
 
 def get_filtered_files(path):
@@ -25,19 +26,28 @@ def get_filtered_files(path):
         flash(f"Error accessing directory: {str(e)}", 'danger')
         return []
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def index(path):
+@app.route('/', defaults={'path': '', 'search': ''})
+@app.route('/<path:path>', defaults={'search': ''})
+@app.route('/search/<search>', defaults={'path': ''})
+def index(path, search):
     full_path = os.path.join(NAS_DIR, path)
-    
+
     if not os.path.exists(full_path):
         flash(f"Directory '{path}' does not exist.", 'danger')
         return redirect(url_for('index'))
-    
+
     # Check if the current path is a directory
     if os.path.isdir(full_path):
         files = get_filtered_files(full_path)
-        return render_template('index.html', files=files, current_path=path)
+
+        # Implement search functionality
+        if search:
+            files = [f for f in files if search.lower() in f.lower()]
+
+        # Sorting files by name or date
+        files = sorted(files, key=lambda x: os.path.getmtime(os.path.join(full_path, x)), reverse=True)
+        
+        return render_template('index.html', files=files, current_path=path, search=search)
     else:
         # If it's a file, treat it as a download
         return send_from_directory(NAS_DIR, path, as_attachment=True)
@@ -45,25 +55,20 @@ def index(path):
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        flash('No file part', 'danger')
-        return redirect(request.url)
+        return jsonify({'success': False, 'message': 'No file part'}), 400
     
     file = request.files['file']
     current_path = request.form.get('current_path', '')
 
     if file.filename == '':
-        flash('No selected file', 'danger')
-        return redirect(request.url)
-    
-    # Save the file securely
+        return jsonify({'success': False, 'message': 'No selected file'}), 400
+
     try:
         save_path = os.path.join(NAS_DIR, current_path)
         file.save(os.path.join(save_path, file.filename))
-        flash(f"File '{file.filename}' uploaded successfully!", 'success')
+        return jsonify({'success': True, 'message': f"File '{file.filename}' uploaded successfully!"}), 200
     except Exception as e:
-        flash(f"Error uploading file: {str(e)}", 'danger')
-    
-    return redirect(url_for('index', path=current_path))
+        return jsonify({'success': False, 'message': f"Error uploading file: {str(e)}"}), 500
 
 @app.route('/create_folder', methods=['POST'])
 def create_folder():
@@ -99,16 +104,13 @@ def view_file(filename):
         if mime_type:
             # Handle media types (PDF, video, and audio)
             if mime_type.startswith('video/') or mime_type.startswith('audio/'):
-                # Render the view_media.html template for media files
                 return render_template('view_media.html', filename=filename, mime_type=mime_type)
             elif mime_type == 'text/plain':
-                # Read the content of text files
                 with open(file_path, 'r') as file:
                     file_content = file.read()
                 return render_template('view_media.html', filename=filename, mime_type=mime_type, file_content=file_content)
             else:
-                # Serve other viewable files (like images, text files) directly
-                return send_file(file_path, mimetype=mime_type)
+                return send_from_directory(NAS_DIR, filename, mimetype=mime_type)
         else:
             flash(f"File '{filename}' cannot be viewed.", 'danger')
             return redirect(url_for('index'))
