@@ -19,7 +19,7 @@ excluded_files = ['.DS_Store', 'Thumbs.db', '$RECYCLE.BIN', 'System Volume Infor
 
 def get_filtered_files(path):
     """
-    List files in the given directory, excluding hidden/system files
+    List files and directories in the given path, excluding hidden/system files
     and those specified in the excluded_files list.
     """
     try:
@@ -90,7 +90,8 @@ def create_folder():
 
     if folder_name:
         try:
-            new_folder_path = os.path.join(NAS_DIR, current_path, folder_name)  # Construct the new folder path
+            # Construct the new folder path within the NAS directory
+            new_folder_path = os.path.join(NAS_DIR, current_path, folder_name)  
             os.makedirs(new_folder_path, exist_ok=True)  # Create the folder
             flash(f"Folder '{folder_name}' created successfully!", 'success')  # Flash success message
         except Exception as e:
