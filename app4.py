@@ -83,7 +83,7 @@ def view_file(filename):
         
         if mime_type:
             # Handle media types (PDF, video, and audio)
-            if mime_type.startswith('video/') or mime_type.startswith('audio/') or mime_type == 'application/pdf':
+            if mime_type.startswith('video/') or mime_type.startswith('audio/'):
                 # Render the view_media.html template for media files
                 return render_template('view_media.html', filename=filename, mime_type=mime_type)
             elif mime_type == 'text/plain':
