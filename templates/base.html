@@ -16,7 +16,8 @@
             <button class="navbar-toggle">☰</button>
             <ul class="navbar-menu">
                 <li><a href="{{ url_for('index') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('nas') }}">Nas</a></li>
+                <!-- Removed the NAS link -->
+                <!-- <li><a href="{{ url_for('nas') }}">Nas</a></li> -->
                 <li><a href="#">Integrations</a></li>
                 <li><a href="#">Terminal</a></li>
                 <li><a href="#">About us</a></li>
@@ -48,7 +49,7 @@
         const toggle = document.querySelector('.navbar-toggle');
         const menu = document.querySelector('.navbar-menu');
 
-        toggle.addEventListener('click', () => {
+        toggle.addEventListener('click', function() {
             menu.classList.toggle('active');
         });
     </script>
