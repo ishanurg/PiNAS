@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
+
+<div class="media-container">
+    <h2>Viewing: {{ filename }}</h2>
+    
+    {% if mime_type.startswith('video/') %}
+        <div class="media-content">
+            <video controls class="media-player">
+                <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    {% elif mime_type.startswith('audio/') %}
+        <div class="media-content">
+            <audio controls class="media-player">
+                <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    {% elif mime_type.startswith('image/') %}
+        <div class="media-content">
+            <img src="{{ url_for('download_file', filename=filename) }}" class="media-player img-fluid" alt="{{ filename }}">
+        </div>
+    {% elif mime_type == 'text/plain' %}
+        <div class="media-content">
+            <pre class="media-text">{{ file_content }}</pre>
+        </div>
+    {% else %}
+        <div class="media-content">
+            <p>This file type cannot be displayed here. <a href="{{ url_for('download_file', filename=filename) }}">Download</a> it to view.</p>
+        </div>
+    {% endif %}
+    
+    <!-- Back button -->
+    <div class="media-back-btn">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Back</a>
+    </div>
+</div>
+{% endblock %}
