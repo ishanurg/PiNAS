@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAS</title>
+</head>
+<body>
+    <h1>Network Attached Storage</h1>
+    <h2>Upload a File</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <input type="submit" value="Upload">
+    </form>
+    <h2>Files:</h2>
+    <ul>
+        {% for file in files %}
+            <li>
+                <a href="{{ url_for('download_file', filename=file) }}">{{ file }}</a>
+                <form action="{{ url_for('delete_file', filename=file) }}" method="post" style="display:inline;">
+                    <input type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
