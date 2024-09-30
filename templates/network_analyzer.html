@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Network Analyzer{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Network Analyzer</h1>
+
+    <!-- Ping Test Form -->
+    <form id="ping-form">
+        <h2>Ping Test</h2>
+        <label for="ip_or_url">Enter IP or URL:</label>
+        <input type="text" id="ip_or_url" name="ip_or_url" placeholder="e.g., google.com" required>
+        <button type="submit">Ping</button>
+        <div id="ping-result" style="margin-top: 20px;"></div>
+    </form>
+
+</div>
+<script>
+    // Ping Test Form Submission
+    document.getElementById('ping-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const ip_or_url = document.getElementById('ip_or_url').value;
+        fetch('/ping_test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'ip_or_url=' + encodeURIComponent(ip_or_url)
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('ping-result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('ping-result').innerHTML = '<p style="color: red;">An error occurred while performing the ping test.</p>';
+        });
+    });
+
+    
+</script>
+{% endblock %}
