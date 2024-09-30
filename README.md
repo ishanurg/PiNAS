@@ -9,3 +9,6 @@ Objective 02-
 Local Device Management and Automation<br/> 
 Objective 03- 
 Integrated Data Analysis and Execution of Custom code<br/>
+
+# PPT Explaining the idea- 
+[View my Canva design](https://www.canva.com/design/DAGRwQS79Fo/Zck0R1lWf39fll_iAUB4dQ/edit?utm_content=DAGRwQS79Fo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
