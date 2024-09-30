@@ -4,39 +4,41 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='view.css') }}">
 
 <div class="media-container">
-    <h2>Viewing: {{ filename }}</h2>
-    
+    <h1>Viewing: {{ filename }}</h1>
+
+    <!-- Display video files -->
     {% if mime_type.startswith('video/') %}
-        <div class="media-content">
-            <video controls class="media-player">
-                <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
-                Your browser does not support the video tag.
-            </video>
-        </div>
+    <video controls class="media-player" width="600">
+        <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Display audio files -->
     {% elif mime_type.startswith('audio/') %}
-        <div class="media-content">
-            <audio controls class="media-player">
-                <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
+    <audio controls class="media-player">
+        <source src="{{ url_for('download_file', filename=filename) }}" type="{{ mime_type }}">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Display PDF files -->
+    {% elif mime_type == 'application/pdf' %}
+    <iframe src="{{ url_for('download_file', filename=filename) }}" class="media-player" width="100%" height="600px"></iframe>
+
+    <!-- Display image files -->
     {% elif mime_type.startswith('image/') %}
-        <div class="media-content">
-            <img src="{{ url_for('download_file', filename=filename) }}" class="media-player img-fluid" alt="{{ filename }}">
-        </div>
+    <img src="{{ url_for('download_file', filename=filename) }}" class="media-player img-fluid" alt="{{ filename }}">
+
+    <!-- Display text files -->
     {% elif mime_type == 'text/plain' %}
-        <div class="media-content">
-            <pre class="media-text">{{ file_content }}</pre>
-        </div>
+    <pre class="media-text">{{ file_content }}</pre>
+
     {% else %}
-        <div class="media-content">
-            <p>This file type cannot be displayed here. <a href="{{ url_for('download_file', filename=filename) }}">Download</a> it to view.</p>
-        </div>
+    <p>This file type cannot be viewed directly. <a href="{{ url_for('download_file', filename=filename) }}">Download it</a> to view.</p>
     {% endif %}
-    
-    <!-- Back button -->
+
+    <br>
     <div class="media-back-btn">
-        <a href="{{ url_for('index') }}" class="btn btn-primary">Back</a>
+        <a href="{{ url_for('index') }}" class="btn">Back to Home</a>
     </div>
 </div>
 {% endblock %}
