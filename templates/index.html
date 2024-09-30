@@ -5,37 +5,23 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}"> <!-- Link to index.css -->
+
+<div class="container mt-5" id="nas_tag">
     <h1 class="mb-4 text-center">Network Attached Storage</h1>
 
     <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=True) %}
         {% if messages %}
-            <div class="alert alert-info">
-                <ul>
-                    {% for category, message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
+            <div class="alert-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
     {% endwith %}
-
-    <!-- Current Path Navigation -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ url_for('index') }}">Home</a>
-            </li>
-            {% if current_path %}
-                {% for folder in current_path.split('/') %}
-                    <li class="breadcrumb-item">
-                        <a href="{{ url_for('index', path=folder) }}">{{ folder }}</a>
-                    </li>
-                {% endfor %}
-            {% endif %}
-        </ol>
-    </nav>
 
     <!-- File Upload Section -->
     <div class="card mb-4">
@@ -46,8 +32,13 @@
                 <div class="form-group">
                     <input type="file" name="file" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Upload</button>
+                <button type="submit" id="upload-button" class="btn btn-primary">Upload</button>
             </form>
+                        <!-- Progress Bar -->
+                        <div id="progress-bar-container">
+                            <div id="progress-bar">0%</</div>
+                        </div>
+            
         </div>
     </div>
 
@@ -65,13 +56,13 @@
                     {% else %}
                         <!-- File: Show options for view, download, delete -->
                         <span>{{ file }}</span>
-                        <div>
-                            {% if file.endswith(('.txt', '.pdf', '.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mp3', '.mov')) %}
-                                <a href="{{ url_for('view_file', filename=(current_path + '/' + file if current_path else file)) }}" class="btn btn-info btn-sm" target="_blank">View</a>
+                        <div class="d-flex">
+                            {% if file.endswith(('.txt', '.pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mp3', 'mov')) %}
+                                <a href="{{ url_for('view_file', filename=(current_path + '/' + file if current_path else file)) }}" class="btn btn-info btn-sm me-2" target="_blank" id="view-button-{{ loop.index }}">View</a>
                             {% endif %}
-                            <a href="{{ url_for('download_file', filename=(current_path + '/' + file if current_path else file)) }}" class="btn btn-success btn-sm">Download</a>
+                            <a href="{{ url_for('download_file', filename=(current_path + '/' + file if current_path else file)) }}" class="btn btn-success btn-sm me-2" id="download-button-{{ loop.index }}">Download</a>
                             <form action="{{ url_for('delete_file', filename=(current_path + '/' + file if current_path else file)) }}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this file?');">Delete</button>
+                                <button type="submit" class="btn btn-danger btn-sm" id="delete-button-{{ loop.index }}" onclick="return confirm('Are you sure you want to delete this file?');">Delete</button>
                             </form>
                         </div>
                     {% endif %}
@@ -82,4 +73,40 @@
         {% endif %}
     </ul>
 </div>
+<script>
+    document.getElementById('upload-form').addEventListener('submit', function(event) {
+        const fileInput = document.getElementById('file-input');
+        const progressBarContainer = document.getElementById('progress-bar-container');
+        const progressBar = document.getElementById('progress-bar');
+
+        if (fileInput.files.length > 0) {
+            progressBarContainer.style.display = 'block';
+
+            const formData = new FormData(this);
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', this.action, true);
+
+            xhr.upload.onprogress = function(event) {
+                if (event.lengthComputable) {
+                    const percentComplete = Math.round((event.loaded / event.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.innerHTML = percentComplete + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    window.location.reload();
+                } else {
+                    alert('File upload failed!');
+                }
+            };
+
+            xhr.send(formData);
+            event.preventDefault();
+        }
+    });
+</script>
+
 {% endblock %}
