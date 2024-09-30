@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Home{% endblock %}</title>
+    <title>{% block title %}Network Analyzer{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
@@ -11,23 +11,20 @@
         <nav class="navbar">
             <a href="{{ url_for('index') }}" class="navbar-brand">
                 <img src="{{ url_for('static', filename='R_icon.png') }}" alt="Logo" class="navbar-logo">
-                <span>RasPy</span>
+                <span class="navbar-title">RasPy</span>
             </a>
-            <button class="navbar-toggle">☰</button>
+            <button class="navbar-toggle" aria-label="Toggle navigation">☰</button>
             <ul class="navbar-menu">
-                <li><a href="{{ url_for('index') }}">Dashboard</a></li>
-                <!-- Removed the NAS link -->
-                <!-- <li><a href="{{ url_for('nas') }}">Nas</a></li> -->
-                <li><a href="#">Integrations</a></li>
-                <li><a href="#">Terminal</a></li>
-                <li><a href="#">About us</a></li>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="#">Integration</a></li>
+                <li><a href="{{ url_for('network_analyzer') }}">Network Analyzer</a></li>
+                <li><a href="#">About Us</a></li>
             </ul>
         </nav>
     </header>
 
     <main class="content">
         {% block content %}
-        <!-- Default content goes here if no block is provided -->
         <h1>Welcome to RasPy</h1>
         <p>This is the default content of the base template.</p>
         {% endblock %}
@@ -36,21 +33,18 @@
     <footer class="footer">
         <div class="profile">
             <img src="{{ url_for('static', filename='profile.png') }}" alt="Profile" class="profile-image">
-            <span>Deez Nuts</span>
+            <span class="profile-name">Insignia</span>
         </div>
-        <!--
-        <div class="footer-links">
-            <a href="#">Privacy Policy</a> |
-            <a href="#">Terms of Service</a>
-        </div>  -->
     </footer>
 
     <script>
-        const toggle = document.querySelector('.navbar-toggle');
-        const menu = document.querySelector('.navbar-menu');
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggle = document.querySelector('.navbar-toggle');
+            const menu = document.querySelector('.navbar-menu');
 
-        toggle.addEventListener('click', function() {
-            menu.classList.toggle('active');
+            toggle.addEventListener('click', function() {
+                menu.classList.toggle('active');
+            });
         });
     </script>
 </body>
