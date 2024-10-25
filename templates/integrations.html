@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* Container to center cards */
+    .card-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px; /* Space between the cards */
+        margin-top: 50px;
+        flex-wrap: wrap;
+    }
+
+    /* Individual card styling */
+    .card {
+        background-color: #fff; /* White background for contrast */
+        width: 250px; /* Width of the card to make it square */
+        height: 250px; /* Height of the card */
+        border-radius: 20px; /* Soft rounded corners */
+        transition: transform 0.3s, box-shadow 0.3s; /* Smooth hover transition */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+    }
+
+    /* Border and color for the individual cards */
+    #card1 {
+        border: 5px solid #007bff; /* Blue border for Soil Moisture */
+    }
+
+    #card2 {
+        border: 5px solid #ffc107; /* Yellow border for Humidity */
+    }
+
+    /* Hover effect for all cards */
+    .card:hover {
+        transform: scale(1.05); /* Slight scaling effect */
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2); /* Box shadow on hover */
+    }
+
+    /* Styling the card titles */
+    .card-title {
+        font-size: 1.6rem; /* Large title */
+        font-weight: 600; /* Bold text */
+        margin-bottom: 10px;
+    }
+
+    /* Styling the card text */
+    .card-text {
+        font-size: 1rem;
+        color: #6c757d; /* Muted text color */
+        margin-bottom: 15px;
+    }
+
+    /* Input styling for the values */
+    .form-control {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333; /* Darker text color */
+        border: none;
+        background: none;
+        text-align: center;
+        width: 80px; /* Smaller input field */
+    }
+
+    /* Add gradient background to the page */
+    body {
+        background: linear-gradient(135deg, #e0f7fa 0%, #e1f5fe 100%); /* Soft gradient background */
+    }
+</style>
+
+<div class="container">
+    <div class="card-container">
+        
+        <!-- Card 2: Humidity with yellow border -->
+        <div id="card1" class="card">
+            <div class="card-body">
+                <h5 class="card-title">HUMIDITY</h5>
+                <p class="card-text">Humidity of the farmland surroundings.</p>
+                <input type="text" class="form-control" value="70%" aria-label="Humidity" readonly>
+            </div>
+        </div>
+
+        <!-- Card 3: Temperature with red border -->
+        <div id="card2" class="card">
+            <div class="card-body">
+                <h5 class="card-title">TEMPERATURE</h5>
+                <p class="card-text">Temperature of the farmland surroundings.</p>
+                <input type="text" class="form-control" value="25" aria-label="Temperature" readonly>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
